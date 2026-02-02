@@ -1,0 +1,20 @@
+[package]
+name = "dreamcoder-ai"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dreamcoder-core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+# AI/LLM Integration (placeholder for future)
+# async-openai = { version = "0.18", optional = true }
+
+[features]
+default = []
+openai = []  # Future: OpenAI integration
+claude = []  # Future: Claude API integration
