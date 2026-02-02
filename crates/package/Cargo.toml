@@ -1,0 +1,13 @@
+[package]
+name = "dreamcoder-package"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+dreamcoder-core = { path = "../core" }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+which = { workspace = true }
