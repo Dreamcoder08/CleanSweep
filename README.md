@@ -357,4 +357,4 @@ MIT © Dreamcoder
 | [Dreamcoder08](https://github.com/Dreamcoder08) | Software Architect · GDE · MVP — Profile |
 | [Dreamcoder_dots](https://github.com/Dreamcoder08/Dreamcoder_dots) | Arch Linux dotfiles — the Python/SHELL version of this manager |
 | [DreamFolio](https://github.com/Dreamcoder08/DreamFolio) | High-performance portfolio — Astro, React, Tailwind |
-| [ARKELYTEX](https://github.com/arkelythex) | Civic, Agri & Legal Tech for Peru |
+| [ARKELYTHEX](https://github.com/arkelythex) | Civic, Agri & Legal Tech for Peru |
