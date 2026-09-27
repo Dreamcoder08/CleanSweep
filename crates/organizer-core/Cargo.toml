@@ -1,0 +1,42 @@
+[package]
+name = "organizer-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Core engine for AI-powered file organization"
+
+[dependencies]
+# Workspace
+types = { path = "../types" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+walkdir = { workspace = true }
+sha2 = { workspace = true }
+
+# File Organizer Specific
+notify = { workspace = true }
+notify-debouncer-full = { workspace = true }
+kamadak-exif = { workspace = true }
+image = { workspace = true }
+image_hasher = { workspace = true }
+pdf-extract = { workspace = true }
+mime_guess = { workspace = true }
+pathdiff = { workspace = true }
+globset = { workspace = true }
+regex = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+mockall = { workspace = true }
+tokio-test = "0.4"

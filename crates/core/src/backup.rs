@@ -118,16 +118,45 @@ impl BackupManager {
     
     /// Calcula hash del estado actual
     async fn calculate_state_hash(&self) -> Result<String> {
-        // TODO: Implementar hash de archivos de config
         let mut hasher = Sha256::new();
-        hasher.update("placeholder");
+        
+        let items_to_hash = vec![
+            ".zshrc",
+            ".bashrc",
+            ".tmux.conf",
+            ".gitconfig",
+        ];
+        
+        let home = dirs::home_dir().unwrap_or_default();
+        
+        for item in items_to_hash {
+            let path = home.join(item);
+            if path.exists() {
+                if let Ok(content) = fs::read(&path).await {
+                    hasher.update(item);
+                    hasher.update(&content);
+                }
+            }
+        }
+        
         let result = hasher.finalize();
         Ok(hex::encode(result))
     }
 }
 
 /// Utilidades de filesystem
-pub async fn get_dir_size(_path: &Path) -> Result<u64> {
-    // TODO: Implementar async recursivo con Box::pin para evitar recursion infinita
-    Ok(0)
+pub async fn get_dir_size(path: &Path) -> Result<u64> {
+    let mut total_size = 0;
+    let mut entries = fs::read_dir(path).await?;
+    
+    while let Some(entry) = entries.next_entry().await? {
+        let metadata = entry.metadata().await?;
+        if metadata.is_dir() {
+            total_size += Box::pin(get_dir_size(&entry.path())).await?;
+        } else {
+            total_size += metadata.len();
+        }
+    }
+    
+    Ok(total_size)
 }

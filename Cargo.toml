@@ -7,7 +7,7 @@ version = "2.0.0"
 edition = "2021"
 authors = ["Dreamcoder <dreamcoder08@protonmail.com>"]
 license = "MIT"
-repository = "https://github.com/dreamcoder08/Dreamcoder_dots"
+repository = "https://github.com/dreamcoder08/CleanSweep"
 rust-version = "1.75"
 
 [workspace.dependencies]
@@ -55,6 +55,27 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 async-trait = "0.1"
 futures = "0.3"
 tokio-stream = "0.1"
+
+# File Organizer - Core
+notify = { version = "6.1", features = ["serde"] }
+notify-debouncer-full = "0.3"
+kamadak-exif = "0.5"
+image = "0.24"
+image_hasher = "1.2"
+pdf-extract = "0.7"
+mime_guess = "2.0"
+pathdiff = "0.2"
+globset = "0.4"
+regex = "1.10"
+
+# File Organizer - AI
+reqwest = { version = "0.11", features = ["json", "stream"] }
+ollama-rs = { version = "0.1", features = ["stream"] }
+
+# File Organizer - Web
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
 
 # Testing
 tempfile = "3.9"

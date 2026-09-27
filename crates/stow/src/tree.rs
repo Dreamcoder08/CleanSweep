@@ -12,7 +12,7 @@ pub struct TreeNode {
     pub path: PathBuf,
     pub is_dir: bool,
     pub children: HashMap<String, TreeNode>,
-    pub source_package: Option<String>,
+    pub source_packages: Vec<String>,
 }
 
 /// Árbol de directorios para stow
@@ -28,7 +28,7 @@ impl StowTree {
                 path: root_path,
                 is_dir: true,
                 children: HashMap::new(),
-                source_package: None,
+                source_packages: Vec::new(),
             },
         }
     }
@@ -55,44 +55,39 @@ impl StowTree {
         let is_last = index == components.len() - 1;
 
         // Insert or get child
-        if !node.children.contains_key(&name) {
+        let child = node.children.entry(name.clone()).or_insert_with(|| {
             let child_path = node.path.join(&name);
-            let child = TreeNode {
+            TreeNode {
                 name: name.clone(),
                 path: child_path,
                 is_dir: !is_last,
                 children: HashMap::new(),
-                source_package: if is_last {
-                    Some(package.to_string())
-                } else {
-                    None
-                },
-            };
-            node.children.insert(name.clone(), child);
-        }
-
-        // Get mutable reference to child and continue recursively
-        if let Some(child) = node.children.get_mut(&name) {
-            if !is_last {
-                Self::insert_recursive(child, components, index + 1, package);
-            } else {
-                // Mark as file from this package
-                child.source_package = Some(package.to_string());
+                source_packages: Vec::new(),
             }
+        });
+
+        if is_last {
+            child.is_dir = false;
+            if !child.source_packages.contains(&package.to_string()) {
+                child.source_packages.push(package.to_string());
+            }
+        } else {
+            child.is_dir = true;
+            Self::insert_recursive(child, components, index + 1, package);
         }
     }
 
     /// Obtiene todos los archivos (hojas) del árbol
-    pub fn get_files(&self) -> Vec<(PathBuf, String)> {
+    pub fn get_files(&self) -> Vec<(PathBuf, Vec<String>)> {
         let mut files = Vec::new();
         Self::collect_files(&self.root, &mut files);
         files
     }
 
-    fn collect_files(node: &TreeNode, files: &mut Vec<(PathBuf, String)>) {
+    fn collect_files(node: &TreeNode, files: &mut Vec<(PathBuf, Vec<String>)>) {
         if !node.is_dir {
-            if let Some(ref package) = node.source_package {
-                files.push((node.path.clone(), package.clone()));
+            if !node.source_packages.is_empty() {
+                files.push((node.path.clone(), node.source_packages.clone()));
             }
         } else {
             for child in node.children.values() {
@@ -106,14 +101,7 @@ impl StowTree {
         let mut overlaps = Vec::new();
         let files = self.get_files();
 
-        // Agrupar por ruta
-        let mut by_path: HashMap<PathBuf, Vec<String>> = HashMap::new();
-        for (path, package) in files {
-            by_path.entry(path).or_default().push(package);
-        }
-
-        // Encontrar rutas con múltiples paquetes
-        for (path, packages) in by_path {
+        for (path, packages) in files {
             if packages.len() > 1 {
                 overlaps.push(Overlap { path, packages });
             }

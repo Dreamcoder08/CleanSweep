@@ -3,6 +3,7 @@ use serde::Serialize;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use dreamcoder_types::Config;
 
 pub struct TemplateEngine {
     handlebars: Handlebars<'static>,
@@ -59,7 +60,7 @@ impl TemplateEngine {
         }
     }
 
-    pub fn with_config(_config: &dreamcoder_core::Config) -> Self {
+    pub fn with_config(_config: &Config) -> Self {
         Self::new()
     }
 

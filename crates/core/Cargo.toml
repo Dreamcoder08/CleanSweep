@@ -21,6 +21,13 @@ hex = { workspace = true }
 sysinfo = { workspace = true }
 dirs = { workspace = true }
 tempfile = { workspace = true }
+toml = "0.9.11"
+dreamcoder-stow = { version = "2.0.0", path = "../stow" }
+dreamcoder-types = { version = "2.0.0", path = "../types" }
+dreamcoder-templates = { version = "2.0.0", path = "../templates" }
+dreamcoder-secrets = { version = "2.0.0", path = "../secrets" }
+dreamcoder-package = { version = "2.0.0", path = "../package" }
+dreamcoder-ai = { version = "2.0.0", path = "../ai" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

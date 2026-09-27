@@ -107,9 +107,11 @@ fn draw_dashboard<B: Backend>(frame: &mut Frame<B>, app: &App, area: Rect) {
 
     // Panel izquierdo: System info
     let sys_info = format!(
-        "OS: {}\nArch: {}\nModules: {} available\nStatus: Ready",
-        "Linux", // TODO: Get from app
-        "x86_64",
+        "User:     {}\nHost:     {}\nOS:       {}\nArch:     {}\nModules:  {} available\nStatus:   Ready",
+        app.system_info.username,
+        app.system_info.hostname,
+        app.system_info.os,
+        app.system_info.arch,
         app.modules.len()
     );
 

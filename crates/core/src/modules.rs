@@ -1,39 +1,22 @@
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
-use crate::{Result, DreamcoderError};
+use dreamcoder_types::{Result, DreamcoderError, Module, Symlink};
 use walkdir::WalkDir;
+use serde::{Deserialize, Serialize};
 
-/// Representa un módulo de dotfiles
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Module {
-    pub name: String,
-    pub path: PathBuf,
-    pub description: Option<String>,
-    pub symlinks: Vec<Symlink>,
-    pub dependencies: Vec<String>,
-    pub pre_install_hook: Option<String>,
-    pub post_install_hook: Option<String>,
-    pub os_specific: Option<OsSpecific>,
+#[derive(Debug, Deserialize, Serialize)]
+struct ModuleMetadata {
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    dependencies: Vec<String>,
+    #[serde(default)]
+    hooks: Option<ModuleHooks>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Symlink {
-    pub source: PathBuf,
-    pub target: PathBuf,
-    pub backup_existing: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OsSpecific {
-    pub linux: Option<ModuleVariant>,
-    pub macos: Option<ModuleVariant>,
-    pub windows: Option<ModuleVariant>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModuleVariant {
-    pub path: PathBuf,
-    pub packages: Vec<String>,
+#[derive(Debug, Deserialize, Serialize)]
+struct ModuleHooks {
+    pre_install: Option<String>,
+    post_install: Option<String>,
 }
 
 pub struct ModuleManager {
@@ -41,7 +24,7 @@ pub struct ModuleManager {
 }
 
 impl ModuleManager {
-    pub fn new(config: &crate::Config) -> Result<Self> {
+    pub fn new(config: &dreamcoder_types::Config) -> Result<Self> {
         Ok(Self {
             root: config.dotfiles_root.clone(),
         })
@@ -51,6 +34,10 @@ impl ModuleManager {
     pub fn discover_modules(&self) -> Result<Vec<Module>> {
         let mut modules = Vec::new();
         
+        if !self.root.exists() {
+            return Ok(modules);
+        }
+
         // Buscar directorios que empiecen con "Dreamcoder"
         for entry in std::fs::read_dir(&self.root)? {
             let entry = entry?;
@@ -80,9 +67,15 @@ impl ModuleManager {
         
         // Buscar metadata (dreamcoder.toml o similar)
         let meta_path = path.join(".dreamcoder.toml");
-        let (description, hooks, deps) = if meta_path.exists() {
-            // TODO: Parse TOML
-            (None, None, Vec::new())
+        let metadata: Option<ModuleMetadata> = if meta_path.exists() {
+            let content = std::fs::read_to_string(&meta_path)?;
+            toml::from_str(&content).map_err(|e| DreamcoderError::Module(format!("Failed to parse metadata: {}", e)))?
+        } else {
+            None
+        };
+        
+        let (description, hooks, deps) = if let Some(meta) = metadata {
+            (meta.description, meta.hooks, meta.dependencies)
         } else {
             (None, None, Vec::new())
         };
@@ -96,8 +89,8 @@ impl ModuleManager {
             description,
             symlinks,
             dependencies: deps,
-            pre_install_hook: hooks.as_ref().and_then(|h: &(Option<String>, Option<String>)| h.0.clone()),
-            post_install_hook: hooks.as_ref().and_then(|h| h.1.clone()),
+            pre_install_hook: hooks.as_ref().and_then(|h| h.pre_install.clone()),
+            post_install_hook: hooks.as_ref().and_then(|h| h.post_install.clone()),
             os_specific: None,
         }))
     }
@@ -109,6 +102,12 @@ impl ModuleManager {
         
         for entry in WalkDir::new(module_path).min_depth(1) {
             let entry = entry?;
+            // Ignorar archivos de metadata y hooks internos
+            let file_name = entry.file_name().to_string_lossy();
+            if file_name.starts_with(".dreamcoder") || file_name == ".hooks" {
+                continue;
+            }
+
             if entry.file_type().is_file() || entry.file_type().is_dir() {
                 let source = entry.path().to_path_buf();
                 let relative = source.strip_prefix(module_path)?;

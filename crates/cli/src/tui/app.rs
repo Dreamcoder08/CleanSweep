@@ -1,11 +1,11 @@
 use crate::tui::events::{Event, EventHandler};
-use dreamcoder_core::{Config, DreamcoderEngine, Module, Operation, Status};
-use std::collections::HashMap;
+use dreamcoder_core::{ApplyOptions, DreamcoderEngine, Module, Operation, Status, SystemInfo};
 use std::time::{Duration, Instant};
 
 /// Estado de la aplicación TUI
 pub struct App {
     pub engine: DreamcoderEngine,
+    pub system_info: SystemInfo,
     pub state: AppState,
     pub modules: Vec<Module>,
     pub selected_module: usize,
@@ -37,9 +37,11 @@ pub enum AppState {
 impl App {
     pub async fn new(engine: DreamcoderEngine) -> anyhow::Result<Self> {
         let modules = engine.detect_modules()?;
+        let system_info = SystemInfo::detect();
         
         Ok(Self {
             engine,
+            system_info,
             state: AppState::Splash,
             modules,
             selected_module: 0,
@@ -85,7 +87,8 @@ impl App {
             KeyCode::Enter => {
                 // Install selected module
                 if let Some(module) = self.modules.get(self.selected_module) {
-                    self.install_module(module.clone()).await?;
+                    let module_clone = module.clone();
+                    self.install_module(module_clone).await?;
                 }
             }
             _ => {}
@@ -119,11 +122,31 @@ impl App {
         self.progress = 0.0;
         self.logs.push(format!("Installing {}...", module.name));
 
-        // TODO: Actual installation logic
-        // For now, just simulate
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        let options = ApplyOptions {
+            modules: vec![module.clone()],
+            backup: true,
+            dry_run: false,
+            skip_hooks: false,
+        };
 
-        self.logs.push(format!("✓ {} installed", module.name));
+        match self.engine.apply(options).await {
+            Ok(result) => {
+                for op in result.operations {
+                    self.logs.push(format!("  {} {}", if matches!(op.status, Status::Success) { "✓" } else { "✗" }, op.message));
+                }
+                if result.success {
+                    self.logs.push(format!("✓ {} installed successfully", module.name));
+                } else {
+                    self.logs.push(format!("✗ {} installation failed", module.name));
+                }
+            }
+            Err(e) => {
+                self.logs.push(format!("Error installing {}: {}", module.name, e));
+                self.state = AppState::Error;
+            }
+        }
+
+        self.progress = 1.0;
         
         Ok(())
     }

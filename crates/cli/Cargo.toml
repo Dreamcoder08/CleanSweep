@@ -38,6 +38,7 @@ tui-big-text = "0.4"
 # Async
 futures = "0.3"
 tokio-stream = "0.1"
+dreamcoder-types = { version = "2.0.0", path = "../types" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

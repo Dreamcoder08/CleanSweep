@@ -1,5 +1,5 @@
 use std::path::Path;
-use dreamcoder_core::Config;
+use dreamcoder_types::Config;
 use async_trait::async_trait;
 
 #[async_trait]

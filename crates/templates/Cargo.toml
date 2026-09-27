@@ -6,7 +6,6 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-dreamcoder-core = { path = "../core" }
 handlebars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -16,6 +15,7 @@ tokio = { workspace = true }
 dirs = { workspace = true }
 hostname = { workspace = true }
 shellexpand = { workspace = true }
+dreamcoder-types = { version = "2.0.0", path = "../types" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

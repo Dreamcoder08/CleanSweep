@@ -1,0 +1,27 @@
+[package]
+name = "organizer-ai"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "AI-powered file classification using local LLMs"
+
+[dependencies]
+# Workspace
+organizer-core = { path = "../organizer-core" }
+types = { path = "../types" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+# AI Specific
+ollama-rs = { workspace = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
