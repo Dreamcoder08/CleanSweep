@@ -6,6 +6,7 @@
 //! - Natural language command parsing
 //! - Auto-configuration suggestions
 
+#[derive(Default)]
 pub struct AiClient;
 
 impl AiClient {

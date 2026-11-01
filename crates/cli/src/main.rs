@@ -1,23 +1,23 @@
 mod args;
 mod commands;
-mod output;
 mod interactive;
+mod output;
 
+use anyhow::Result;
 use args::{Cli, Commands};
 use clap::Parser;
 use tracing::debug;
-use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     // Setup logging
     setup_logging(cli.verbose);
-    
+
     debug!("Dreamcoder CLI started");
     debug!("Command: {:?}", cli.command);
-    
+
     // Ejecutar comando - clone cli to avoid move issues
     let cli_for_cmd = cli.clone();
     match cli.command {
@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
         Commands::Init(args) => commands::init(args, cli_for_cmd).await?,
         Commands::Interactive => interactive::run().await?,
     }
-    
+
     Ok(())
 }
 
@@ -41,7 +41,7 @@ fn setup_logging(verbosity: u8) {
         1 => "debug",
         _ => "trace",
     };
-    
+
     tracing_subscriber::fmt()
         .with_env_filter(format!("dreamcoder={}", level))
         .init();

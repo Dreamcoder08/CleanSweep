@@ -1,52 +1,52 @@
-use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use thiserror::Error;
-use tracing::{debug, info, error};
+use tracing::{debug, info};
 
-pub mod config;
-pub mod state;
-pub mod modules;
 pub mod backup;
+pub mod config;
+pub mod modules;
+pub mod state;
 
 pub use config::Config;
-pub use state::{State, StateManager};
 pub use modules::{Module, ModuleManager};
+pub use state::{State, StateManager};
 
 #[derive(Error, Debug)]
 pub enum DreamcoderError {
     #[error("Configuration error: {0}")]
     Config(String),
-    
+
     #[error("Module error: {0}")]
     Module(String),
-    
+
     #[error("Backup error: {0}")]
     Backup(String),
-    
+
     #[error("Filesystem error: {0}")]
     Filesystem(String),
-    
+
     #[error("Template error: {0}")]
     Template(String),
-    
+
     #[error("Secret error: {0}")]
     Secret(String),
-    
+
     #[error("Package manager error: {0}")]
     Package(String),
-    
+
     #[error("AI Protocol error: {0}")]
     Ai(String),
-    
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     #[error("Walkdir error: {0}")]
     Walkdir(String),
-    
+
     #[error("Path error: {0}")]
     Path(String),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -76,39 +76,42 @@ impl DreamcoderEngine {
     pub fn new(config: Config) -> Result<Self> {
         let state = StateManager::new(&config)?;
         let module_manager = ModuleManager::new(&config)?;
-        
-        info!("Dreamcoder Engine initialized v{}", env!("CARGO_PKG_VERSION"));
-        
+
+        info!(
+            "Dreamcoder Engine initialized v{}",
+            env!("CARGO_PKG_VERSION")
+        );
+
         Ok(Self {
             config,
             _state: state,
             module_manager,
         })
     }
-    
+
     /// Detecta módulos disponibles en el repositorio
     pub fn detect_modules(&self) -> Result<Vec<Module>> {
         self.module_manager.discover_modules()
     }
-    
+
     /// Ejecuta una operación completa (AI-First protocol)
     pub async fn apply(&self, options: ApplyOptions) -> Result<OperationResult> {
         let mut operations = Vec::new();
-        
+
         // 1. Backup si está habilitado
         if options.backup {
             debug!("Creating backup before apply");
             let backup_op = self.create_backup().await?;
             operations.push(backup_op);
         }
-        
+
         // 2. Instalar módulos
         for module in &options.modules {
             debug!("Installing module: {}", module.name);
             let install_op = self.install_module(module).await?;
             operations.push(install_op);
         }
-        
+
         // 3. Post-install hooks
         for module in &options.modules {
             if let Some(hook) = &module.post_install_hook {
@@ -117,20 +120,22 @@ impl DreamcoderEngine {
                 operations.push(hook_op);
             }
         }
-        
-        let all_success = operations.iter().all(|op| matches!(op.status, Status::Success));
-        
+
+        let all_success = operations
+            .iter()
+            .all(|op| matches!(op.status, Status::Success));
+
         Ok(OperationResult {
             success: all_success,
             operations,
             timestamp: chrono::Utc::now(),
         })
     }
-    
+
     /// Crea backup inteligente (solo si hay cambios)
     pub async fn create_backup(&self) -> Result<Operation> {
         let backup = backup::BackupManager::new(&self.config);
-        
+
         // Verificar si hay cambios
         if !backup.has_changes().await? {
             return Ok(Operation {
@@ -142,9 +147,9 @@ impl DreamcoderEngine {
                 metadata: serde_json::json!({}),
             });
         }
-        
+
         let backup_path = backup.create().await?;
-        
+
         Ok(Operation {
             id: uuid::Uuid::new_v4().to_string(),
             action: ActionType::Backup,
@@ -157,7 +162,7 @@ impl DreamcoderEngine {
             }),
         })
     }
-    
+
     /// Instala un módulo específico
     pub async fn install_module(&self, module: &Module) -> Result<Operation> {
         // Pre-install checks
@@ -178,10 +183,10 @@ impl DreamcoderEngine {
                 }),
             });
         }
-        
+
         // Realizar instalación
         self.module_manager.install(module).await?;
-        
+
         Ok(Operation {
             id: uuid::Uuid::new_v4().to_string(),
             action: ActionType::Install,
@@ -194,11 +199,11 @@ impl DreamcoderEngine {
             }),
         })
     }
-    
+
     /// Ejecuta un hook (shell script o comando)
     async fn run_hook(&self, hook: &str, module: &Module) -> Result<Operation> {
         use tokio::process::Command;
-        
+
         let output = Command::new("sh")
             .arg("-c")
             .arg(hook)
@@ -206,15 +211,21 @@ impl DreamcoderEngine {
             .env("DREAMCODER_ROOT", &self.config.dotfiles_root)
             .output()
             .await?;
-        
+
         let success = output.status.success();
-        
+
         Ok(Operation {
             id: uuid::Uuid::new_v4().to_string(),
             action: ActionType::Hook,
-            status: if success { Status::Success } else { Status::Failed },
+            status: if success {
+                Status::Success
+            } else {
+                Status::Failed
+            },
             message: String::from_utf8_lossy(&output.stdout).to_string(),
-            requires_input: if success { None } else {
+            requires_input: if success {
+                None
+            } else {
                 Some(InputRequest {
                     input_type: InputType::Confirm,
                     message: "Hook failed, continue?".to_string(),
@@ -321,12 +332,12 @@ pub struct SystemInfo {
 impl SystemInfo {
     pub fn detect() -> Self {
         let home = dirs::home_dir().unwrap_or_default();
-        
+
         // Get username from environment variable
         let username = std::env::var("USER")
             .or_else(|_| std::env::var("USERNAME"))
             .unwrap_or_default();
-        
+
         Self {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),

@@ -13,6 +13,8 @@ pub struct TreeNode {
     pub is_dir: bool,
     pub children: HashMap<String, TreeNode>,
     pub source_package: Option<String>,
+    /// Every package that provides this file, in insertion order
+    pub source_packages: Vec<String>,
 }
 
 /// Árbol de directorios para stow
@@ -29,6 +31,7 @@ impl StowTree {
                 is_dir: true,
                 children: HashMap::new(),
                 source_package: None,
+                source_packages: Vec::new(),
             },
         }
     }
@@ -67,6 +70,7 @@ impl StowTree {
                 } else {
                     None
                 },
+                source_packages: Vec::new(),
             };
             node.children.insert(name.clone(), child);
         }
@@ -78,6 +82,9 @@ impl StowTree {
             } else {
                 // Mark as file from this package
                 child.source_package = Some(package.to_string());
+                if !child.source_packages.iter().any(|p| p == package) {
+                    child.source_packages.push(package.to_string());
+                }
             }
         }
     }
@@ -104,22 +111,21 @@ impl StowTree {
     /// Detecta solapamientos entre paquetes
     pub fn detect_overlaps(&self) -> Vec<Overlap> {
         let mut overlaps = Vec::new();
-        let files = self.get_files();
-
-        // Agrupar por ruta
-        let mut by_path: HashMap<PathBuf, Vec<String>> = HashMap::new();
-        for (path, package) in files {
-            by_path.entry(path).or_default().push(package);
-        }
-
-        // Encontrar rutas con múltiples paquetes
-        for (path, packages) in by_path {
-            if packages.len() > 1 {
-                overlaps.push(Overlap { path, packages });
-            }
-        }
-
+        Self::collect_overlaps(&self.root, &mut overlaps);
         overlaps
+    }
+
+    fn collect_overlaps(node: &TreeNode, overlaps: &mut Vec<Overlap>) {
+        if node.is_dir {
+            for child in node.children.values() {
+                Self::collect_overlaps(child, overlaps);
+            }
+        } else if node.source_packages.len() > 1 {
+            overlaps.push(Overlap {
+                path: node.path.clone(),
+                packages: node.source_packages.clone(),
+            });
+        }
     }
 }
 

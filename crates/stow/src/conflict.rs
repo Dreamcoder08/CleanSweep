@@ -1,13 +1,13 @@
 //! Resolución de conflictos stow
-//! 
+//!
 //! Detecta y maneja conflictos entre symlinks y archivos existentes.
 
 use std::path::PathBuf;
 use tokio::fs;
 use tracing::warn;
 
-use crate::{SymlinkOperation, Result, StowError};
 use crate::types::OperationType;
+use crate::{Result, StowError, SymlinkOperation};
 
 /// Representa un conflicto detectado
 #[derive(Debug, Clone)]
@@ -37,17 +37,17 @@ impl ConflictResolver {
     /// Detecta conflictos en un conjunto de operaciones
     pub async fn detect_conflicts(operations: &[SymlinkOperation]) -> Result<Vec<Conflict>> {
         let mut conflicts = Vec::new();
-        
+
         for op in operations {
             // Solo verificar operaciones de creación
             if !matches!(op.op_type, OperationType::CreateSymlink) {
                 continue;
             }
-            
+
             // Verificar si el target existe
             if fs::metadata(&op.target).await.is_ok() {
                 let metadata = fs::symlink_metadata(&op.target).await?;
-                
+
                 if metadata.is_file() {
                     // Archivo regular
                     conflicts.push(Conflict {
@@ -70,7 +70,7 @@ impl ConflictResolver {
                 } else if metadata.file_type().is_symlink() {
                     // Es un symlink, verificar a dónde apunta
                     let existing_target = fs::read_link(&op.target).await?;
-                    
+
                     if existing_target != op.source {
                         conflicts.push(Conflict {
                             path: op.target.clone(),
@@ -82,17 +82,17 @@ impl ConflictResolver {
                 }
             }
         }
-        
+
         Ok(conflicts)
     }
-    
+
     /// Intenta resolver conflictos automáticamente
     pub async fn resolve_conflicts(
         conflicts: &[Conflict],
         strategy: ResolutionStrategy,
     ) -> Result<Vec<SymlinkOperation>> {
         let mut operations = Vec::new();
-        
+
         for conflict in conflicts {
             match strategy {
                 ResolutionStrategy::Backup => {
@@ -117,7 +117,7 @@ impl ConflictResolver {
                 }
             }
         }
-        
+
         Ok(operations)
     }
 }
