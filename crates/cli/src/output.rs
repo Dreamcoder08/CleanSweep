@@ -116,6 +116,18 @@ impl AiResponse {
         }
     }
 
+    /// Wraps arbitrary state in a successful protocol envelope
+    pub fn success_state(state: serde_json::Value) -> Self {
+        Self {
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            request_id: uuid::Uuid::new_v4().to_string(),
+            status: AiStatus::Success,
+            data: AiData::State(state),
+            requires_action: None,
+        }
+    }
+
     pub fn write_json(&self) -> anyhow::Result<()> {
         let json = serde_json::to_string_pretty(self)?;
         println!("{}", json);

@@ -1,4 +1,5 @@
 use crate::args::*;
+use crate::output::AiResponse;
 use crate::Cli;
 use anyhow::Result;
 use colored::*;
@@ -134,12 +135,11 @@ pub async fn status(_args: StatusArgs, cli: Cli) -> Result<()> {
     let sys_info = SystemInfo::detect();
 
     if cli.json {
-        let status = serde_json::json!({
+        let state = serde_json::json!({
             "config": config,
             "system": sys_info,
-            "version": env!("CARGO_PKG_VERSION"),
         });
-        println!("{}", serde_json::to_string_pretty(&status)?);
+        AiResponse::success_state(state).write_json()?;
         return Ok(());
     }
 
