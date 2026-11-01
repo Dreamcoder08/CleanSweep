@@ -77,6 +77,12 @@ pub struct AgeProvider {
     identity_file: Option<std::path::PathBuf>,
 }
 
+impl Default for AgeProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AgeProvider {
     pub fn new() -> Self {
         Self {
@@ -150,6 +156,12 @@ impl SecretProvider for AgeProvider {
 // 1Password CLI
 pub struct OnePasswordProvider;
 
+impl Default for OnePasswordProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OnePasswordProvider {
     pub fn new() -> Self { Self }
 }
@@ -177,7 +189,7 @@ impl SecretProvider for OnePasswordProvider {
         
         // Example: op read "op://Personal/dotfiles/config"
         let output = Command::new("op")
-            .args(&["read", "op://Personal/dotfiles/config"])
+            .args(["read", "op://Personal/dotfiles/config"])
             .output()
             .await?;
         
@@ -193,6 +205,12 @@ impl SecretProvider for OnePasswordProvider {
 
 // Bitwarden CLI
 pub struct BitwardenProvider;
+
+impl Default for BitwardenProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl BitwardenProvider {
     pub fn new() -> Self { Self }
@@ -218,7 +236,7 @@ impl SecretProvider for BitwardenProvider {
         use tokio::process::Command;
         
         let output = Command::new("bw")
-            .args(&["get", "item", "dotfiles"])
+            .args(["get", "item", "dotfiles"])
             .output()
             .await?;
         

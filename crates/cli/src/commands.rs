@@ -42,12 +42,11 @@ pub async fn apply(args: ApplyArgs, cli: Cli) -> Result<()> {
     }
     
     // Confirmar si no es non-interactive
-    if !cli.non_interactive && !cli.yes {
-        if !confirm("Apply these changes?")? {
+    if !cli.non_interactive && !cli.yes
+        && !confirm("Apply these changes?")? {
             println!("Cancelled.");
             return Ok(());
         }
-    }
     
     // Aplicar con barra de progreso si hay TTY
     let term = Term::stdout();

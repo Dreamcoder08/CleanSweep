@@ -30,6 +30,12 @@ pub struct UserInfo {
     pub home: PathBuf,
 }
 
+impl Default for TemplateEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TemplateEngine {
     pub fn new() -> Self {
         let mut handlebars = Handlebars::new();
@@ -131,7 +137,7 @@ impl TemplateEngine {
     }
 
     pub fn render_file(&self, path: &Path) -> Result<String, TemplateError> {
-        let content = std::fs::read_to_string(path).map_err(|e| TemplateError::Io(e))?;
+        let content = std::fs::read_to_string(path).map_err(TemplateError::Io)?;
         self.render(&content)
     }
 }

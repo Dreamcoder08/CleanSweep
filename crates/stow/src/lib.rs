@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 use thiserror::Error;
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 use walkdir::WalkDir;
 
 pub mod types;
@@ -157,15 +157,14 @@ impl StowManager {
                 let target = std::fs::read_link(path)?;
                 
                 // Verificar si apunta a nuestro source_dir
-                if target.starts_with(&self.config.source_dir) {
-                    if !target.exists() {
+                if target.starts_with(&self.config.source_dir)
+                    && !target.exists() {
                         broken.push(BrokenSymlink {
                             link: path.to_path_buf(),
                             target,
                             reason: "Target does not exist".to_string(),
                         });
                     }
-                }
             }
         }
         

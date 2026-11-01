@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::{debug, info, error};
+use tracing::{debug, info};
 
 pub mod config;
 pub mod state;
