@@ -46,8 +46,8 @@ impl StateManager {
 
     pub fn save(&self) -> Result<()> {
         let state_file = self.state_dir.join("state.json");
-        let json = serde_json::to_string_pretty(&self.state)
-            .map_err(DreamcoderError::Serialization)?;
+        let json =
+            serde_json::to_string_pretty(&self.state).map_err(DreamcoderError::Serialization)?;
         fs::write(state_file, json)?;
         Ok(())
     }

@@ -4,12 +4,12 @@ use std::io::{stdout, Write};
 pub async fn run() -> anyhow::Result<()> {
     println!("🎩 Dreamcoder Interactive Mode");
     println!("================================\n");
-    
+
     let config = Config::load().unwrap_or_default();
     let engine = DreamcoderEngine::new(config)?;
-    
+
     let modules = engine.detect_modules()?;
-    
+
     // Simple TUI loop
     loop {
         println!("\nMain Menu:");
@@ -18,13 +18,13 @@ pub async fn run() -> anyhow::Result<()> {
         println!("  [3] Backup");
         println!("  [4] Status");
         println!("  [q] Quit");
-        
+
         print!("\nSelect: ");
         stdout().flush()?;
-        
+
         let mut input = String::new();
         std::io::stdin().read_line(&mut input)?;
-        
+
         match input.trim() {
             "1" => {
                 println!("\nAvailable modules:");
@@ -48,7 +48,7 @@ pub async fn run() -> anyhow::Result<()> {
             _ => println!("Invalid option"),
         }
     }
-    
+
     println!("\nGoodbye! 👋");
     Ok(())
 }
