@@ -70,7 +70,17 @@ impl StowManager {
         let operations = self.engine.plan_stow(&package_path).await?;
 
         // Verificar conflictos
-        let conflicts = ConflictResolver::detect_conflicts(&operations).await?;
+        // Un archivo regular con backup planificado no es un conflicto
+        let conflicts: Vec<_> = ConflictResolver::detect_conflicts(&operations)
+            .await?
+            .into_iter()
+            .filter(|c| {
+                !(c.conflict_type == conflict::ConflictType::RegularFile
+                    && operations.iter().any(|op| {
+                        op.op_type == types::OperationType::Backup && op.target == c.path
+                    }))
+            })
+            .collect();
         if !conflicts.is_empty() {
             warn!("Detected {} conflicts", conflicts.len());
             return Err(StowError::Conflict {
