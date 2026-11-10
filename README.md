@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 
+![Salida real de dreamcoder --version y dreamcoder --help en la terminal](docs/assets/cli-help.png)
+
 ---
 
 ## 🚀 Características Principales
